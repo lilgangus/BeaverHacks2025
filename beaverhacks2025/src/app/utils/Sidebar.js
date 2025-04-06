@@ -6,7 +6,7 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 bg-gray-800 text-white h-screen p-4">
-      <h2 className="text-2xl font-bold mb-6">Benny AI</h2>
+      <h2 className="text-2xl font-bold mb-6">Benny's Contracts</h2>
       <nav>
         <ul>
           <li>

@@ -32,10 +32,12 @@ export default function Home() {
 
   // Function to send the transcript and audio file to the backend
   const processSmartcontract = async () => {
-    console.log("Processing smart contract...");
-    console.log("Transcript:", transcript);
-    console.log("Audio File:", audioFile);
-    console.log("Selected Contact:", selectedContact);
+    // console.log("Processing smart contract...");
+    // console.log("Transcript:", transcript);
+    // console.log("Audio File:", audioFile);
+    // console.log("Selected Contact:", selectedContact);
+    // console.log("username :", user);
+    // console.log("Public Key:", publicKey);
 
     if (!transcript || !audioFile || !selectedContact) {
       console.error("Some field is missing!");
@@ -45,10 +47,14 @@ export default function Home() {
     // Create a FormData object to send the transcript and audio as form data
     const formData = new FormData();
     formData.append("transcript", transcript);
-    formData.append("audio", audioFile, "recorded-audio.webm"); // You can give your audio a specific name here
+    formData.append("audio", audioFile, "recorded-audio.webm"); 
+    formData.append("contactPubKey", selectedContact);
+    formData.append("username", user);
+    formData.append("publicKey", publicKey);
+    
 
     try {
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/createSmartContract", {
         method: "POST",
         body: formData,
       });
@@ -167,7 +173,7 @@ export default function Home() {
         <div className="max-w-xl mx-auto text-center mt-10">
           <h1 className="text-3xl font-bold mb-4 underline">Welcome to BENNY!</h1>
           <p className="mb-4">
-            Benny is your own personal AI assistant to help you with scheduling your everyday tasks and interact with the real world using technologies such as SUI!
+            Benny is your own personal contract enforcer that allows you to record verbal agreements with other and store them on the blockchain. This creates a permanent record of your agreement, which can be used as evidence in case of disputes.
           </p>
 
           {user ? (
@@ -226,11 +232,15 @@ export default function Home() {
                 id="contact-select"
                 className="block w-full px-3 py-2 border border-gray-300 bg-white rounded shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                 value={selectedContact}
-                onChange={(e) => setSelectedContact(e.target.value)}
+                // onChange={(e) => setSelectedContact(e.target.value)}
+                onChange={(e) => {
+                    setSelectedContact(e.target.value);
+                    console.log("Selected Contact:", e.target.value);
+                }}
             >
                 <option value="">-- Choose a contact --</option>
                 {contacts.map((contact, index) => (
-                <option key={index} value={contact.username}>
+                <option key={index} value={contact.walletAddress}>
                     {contact.username}, {contact.walletAddress}
                 </option>
                 ))}

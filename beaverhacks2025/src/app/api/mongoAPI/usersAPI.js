@@ -21,14 +21,18 @@ async function connectToDatabase() {
     }
 }
 
-async function createUser(Username, Password, OSUverified, CreatedDate, Email, FirstName, LastName) {
+async function createUser(Username, Password, CreatedDate, Email, FirstName, LastName) {
   const users = await connectToDatabase();
+
+  const existingUser = await users.findOne({ Username });
+  if (existingUser) {
+    throw new Error("Username already exists with the username");
+  }
 
   // Handle undefined values by setting them to empty string
   const newUser = {
     Username,
     Password,
-    OSUverified,
     CreatedDate,
     Email,
     FirstName,
@@ -52,11 +56,11 @@ async function getUser(Username) {
   return user;
 }
 
-async function updateUser(Username, Password, OSUverified, CreatedDate, Email, FirstName, LastName) {
+async function updateUser(Username, Password, CreatedDate, Email, FirstName, LastName) {
   const users = await connectToDatabase();
   const result = await users.updateOne(
     { Username },
-    { $set: { Password, OSUverified, CreatedDate, Email, FirstName, LastName } }
+    { $set: { Password, CreatedDate, Email, FirstName, LastName } }
   );
   return result;
 }
