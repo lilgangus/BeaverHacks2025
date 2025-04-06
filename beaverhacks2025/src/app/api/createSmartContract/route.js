@@ -32,19 +32,11 @@ export async function POST(request) {
     }
 
     const secretKey = keys.secretKey;
+ 
     
-    // store all the data in mongodb
-    const data = {
-        transcript: transcript,
-        audio: audio,
-        contact: contact,
-        username: username,
-        publicKey: publicKey,
-    };
-
 
     // create the contract
-    const newContract = await createContract(transcript, audio, contact, username, publicKey);
+    const newContract = await createContract(transcript, audio, contact, username, publicKey, new Date());
     if (!newContract) {
         return NextResponse.json({ error: "Failed to create smart contract" }, { status: 500 });
     }
@@ -77,7 +69,8 @@ export async function GET(request) {
         contact: contract.contact,
         username: contract.username,
         publicKey: contract.publicKey,
+        date: contract.date,
     }));
     return NextResponse.json(formattedContracts);
-    
+
 }

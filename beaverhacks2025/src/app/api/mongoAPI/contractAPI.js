@@ -28,9 +28,9 @@ async function connectToDatabase() {
 // const contact = formData.get("contactPubKey");
 // const username = formData.get("username");
 // const publicKey = formData.get("publicKey");
-async function createContract(transcript, audio, contact, username, publicKey) {
+async function createContract(transcript, audio, contact, username, publicKey, date) {
     const db = await connectToDatabase();
-    const newContract = { transcript, audio, contact, username, publicKey };
+    const newContract = { transcript, audio, contact, username, publicKey, date };
     const result = await db.insertOne(newContract);
     return result;
 

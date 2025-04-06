@@ -84,18 +84,23 @@ export default function SUIcontracts() {
 
                 <ul className="space-y-4">
                     {userContracts.length > 0 ? (
-                        userContracts.map((contract) => (
+                        [...userContracts]
+                        .sort((a, b) => new Date(b.date) - new Date(a.date)) // earliest date at the top
+                        .map((contract) => (
                             <li key={contract.id} className="border p-4 rounded-md">
-                                <h3 className="text-lg font-semibold">Contract ID: {contract.id}</h3>
-                                <p>Transcript: {contract.transcript}</p>
-                                <a class="text-blue-500 hover:text-blue-700 hover:underline">Audio link</a>
-                                <p>Contact: {contract.contact}</p>
+                            <h3 className="text-lg font-semibold">Contract ID: {contract.id}</h3>
+                            <p>Transcript: {contract.transcript}</p>
+                            <a className="text-blue-500 hover:text-blue-700 hover:underline">Audio link</a>
+                            <p>Contact: {contract.contact}</p>
+                            <p>Date: {new Date(contract.date).toLocaleString()}</p>
                             </li>
                         ))
                     ) : (
                         <p className="text-gray-500">No contracts found.</p>
                     )}
                 </ul>
+
+
             </div>
         </div>
     );
