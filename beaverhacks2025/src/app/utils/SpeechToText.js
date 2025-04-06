@@ -1,99 +1,105 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 
 export default function SpeechToText({ onTranscriptChange, onAudioSave }) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [audioBlob, setAudioBlob] = useState(null);
   const mediaRecorderRef = useRef(null);
-  const chunks = useRef([]);
+  const chunksRef = useRef([]);
   const streamRef = useRef(null);
-  let recognition;
+  const recognitionRef = useRef(null);
 
-  // Web Speech API Setup (works on Chrome, etc.)
-  if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+  const CHUNK_DURATION_MS = 30_000; // 30 seconds
+
+  // Initialize SpeechRecognition once
+  function initRecognition() {
+    if (recognitionRef.current || typeof window === 'undefined' || !window.webkitSpeechRecognition) return;
     const SpeechRecognition = window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
 
-    recognition.onresult = (event) => {
-      let interimTranscript = '';
+    rec.onresult = (event) => {
+      let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          setTranscript((prev) => {
-            const newTranscript = prev + result[0].transcript + ' ';
-            // Pass the new transcript to the parent
-            onTranscriptChange(newTranscript);
-            return newTranscript;
+          setTranscript(prev => {
+            const updated = prev + result[0].transcript + ' ';
+            onTranscriptChange(updated);
+            return updated;
           });
         } else {
-          interimTranscript += result[0].transcript;
+          interim += result[0].transcript;
         }
+      }
+      // you could show interim if you like
+    };
+
+    rec.onerror = (e) => console.error('Speech recognition error', e);
+
+    // if recognition ends unexpectedly, restart it
+    rec.onend = () => {
+      if (isListening) {
+        rec.start();
       }
     };
 
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-    };
+    recognitionRef.current = rec;
   }
-  
-  // Start and stop the audio recording using MediaRecorder
-  const startRecording = async () => {
+
+  async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     streamRef.current = stream;
 
-    // Create a MediaRecorder instance
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
+    const recorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = recorder;
 
-    // Collect audio chunks as they come in
-    mediaRecorder.ondataavailable = (event) => {
-      chunks.current.push(event.data);
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        chunksRef.current.push(e.data);
+        // immediately emit each chunk
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        onAudioSave(blob);
+        chunksRef.current = [];
+      }
     };
 
-    // When the recording is stopped, combine chunks and create a Blob
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(chunks.current, { type: 'audio/webm' });
-      setAudioBlob(audioBlob);
-      onAudioSave(audioBlob); // Pass the audioBlob to the parent
-      chunks.current = []; // Clear the chunks for the next recording
-    };
+    recorder.start(CHUNK_DURATION_MS); 
+    // by passing the timeslice, you get dataavailable every 30s without stopping
+  }
 
-    mediaRecorder.start();
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
+  function stopRecording() {
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop();
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop()); // Stop the media stream
-    }
-  };
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    mediaRecorderRef.current = null;
+  }
 
-  // Toggle the speech recognition and audio recording
   const toggleListening = () => {
+    initRecognition();
+
     if (isListening) {
-      recognition.stop();
-      stopRecording(); // Stop recording
+      // stop everything
+      recognitionRef.current.stop();
+      stopRecording();
     } else {
-      setTranscript(''); // Reset transcript when starting listening
-      onTranscriptChange(''); // Notify the parent to reset the transcript
-      startRecording(); // Start recording
-      recognition.start(); // Start speech recognition
+      setTranscript('');
+      onTranscriptChange('');
+      startRecording();
+      recognitionRef.current.start();
     }
     setIsListening(!isListening);
   };
 
-  // Handle manual editing of the transcript
   const handleChange = (e) => {
-    const editedTranscript = e.target.value;
-    setTranscript(editedTranscript);
-    onTranscriptChange(editedTranscript); // Update the parent with the new value
+    const val = e.target.value;
+    setTranscript(val);
+    onTranscriptChange(val);
   };
 
   return (
@@ -113,12 +119,6 @@ export default function SpeechToText({ onTranscriptChange, onAudioSave }) {
           rows={6}
         />
       </div>
-      {/* {audioBlob && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Recorded Audio</h3>
-          <audio controls src={URL.createObjectURL(audioBlob)} />
-        </div>
-      )} */}
     </div>
   );
 }
