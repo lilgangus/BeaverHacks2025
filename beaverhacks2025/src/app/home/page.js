@@ -136,11 +136,9 @@ export default function Home() {
                 fetchPubKeys();
             }
         };
-        fetchKeys();
-    
-    }, [user]);
 
-    const fetchPubKeys = async () => {
+
+        const fetchPubKeys = async () => {
         try {
             const res = await fetch(`/api/settings?user=${user}&type=pubKey`, {
                 method: "GET",
@@ -148,6 +146,31 @@ export default function Home() {
                     "Content-Type": "application/json",
                 },
             });
+
+            const fetchPubKeys = async () => {
+              try {
+                  const res = await fetch(`/api/settings?user=${user}&type=pubKey`, {
+                      method: "GET",
+                      headers: {
+                          "Content-Type": "application/json",
+                      },
+                  });
+      
+                  if (!res.ok) {
+                      console.error("Error fetching keys");
+                      return;
+                  }
+      
+                  const pubKey = await res.json();
+                  
+                  setPublicKey(pubKey);
+                  
+                  console.log("Public Key:", pubKey);
+      
+              } catch (err) {
+                  console.error("Error fetching keys:", err);
+              }
+          };
 
             if (!res.ok) {
                 console.error("Error fetching keys");
@@ -164,6 +187,12 @@ export default function Home() {
             console.error("Error fetching keys:", err);
         }
     };
+
+        fetchKeys();
+    
+    }, [user]);
+
+    
 
 
   return (

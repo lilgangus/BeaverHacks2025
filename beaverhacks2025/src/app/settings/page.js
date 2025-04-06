@@ -107,7 +107,7 @@ export default function Settings() {
                     <h1 className="text-3xl font-bold mb-4">Account Settings</h1>
 
                     <p className="mb-4">Manage your account settings here </p>
-                    <p className="mb-4">{user}'s current public key: {CurrPublicKey}</p>
+                    <p className="mb-4">{user}&apos;s current public key: {CurrPublicKey}</p>
                     {/* form to input public and secret key */}
 
                     <form className="space-y-4" onSubmit={saveKeys}>
