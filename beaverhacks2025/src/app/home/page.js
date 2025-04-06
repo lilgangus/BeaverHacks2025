@@ -1,13 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import LogoutButton from "../utils/logout";
+
+
+import SpeechToText from "../utils/SpeechToText";
 
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+
+  const [transcript, setTranscript] = useState('');
+
+  const handleTranscriptChange = (newTranscript) => {
+    setTranscript(newTranscript);
+    console.log("Transcript:", newTranscript);
+  };
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -49,6 +60,9 @@ export default function Home() {
       ) : (
         <p className="mb-4 italic text-gray-500">Loading user...</p>
       )}
+
+    <SpeechToText onTranscriptChange={handleTranscriptChange} />
+
 
     </div>
   );
