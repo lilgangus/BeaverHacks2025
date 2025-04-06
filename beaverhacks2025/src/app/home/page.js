@@ -12,7 +12,8 @@ export default function Home() {
 
   const [transcript, setTranscript] = useState('');
   const [audioFile, setAudioFile] = useState(null);
-  const [contractUsername, setContractUsername] = useState('');
+  const [contacts, setContacts] = useState([]);
+  const [selectedContact, setSelectedContact] = useState('');
 
   const handleTranscriptChange = (newTranscript) => {
     setTranscript(newTranscript);
@@ -30,8 +31,13 @@ export default function Home() {
 
   // Function to send the transcript and audio file to the backend
   const processSmartcontract = async () => {
-    if (!transcript || !audioFile) {
-      console.error("Transcript or audio file is missing!");
+    console.log("Processing smart contract...");
+    console.log("Transcript:", transcript);
+    console.log("Audio File:", audioFile);
+    console.log("Selected Contact:", selectedContact);
+    
+    if (!transcript || !audioFile || !selectedContact) {
+      console.error("Some field is missing!");
       return;
     }
 
@@ -83,6 +89,25 @@ export default function Home() {
 
     fetchUser();
   }, [router]);
+
+  // populate based on the users con
+    useEffect(() => {
+        if (user) {
+        const fetchContacts = async () => {
+            const response = await fetch(`/api/contacts?user=${user}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            });
+    
+            const data = await response.json();
+            setContacts(data);
+        };
+    
+        fetchContacts();        
+        }
+    }, [user]);
 
   return (
     <div className="flex">
@@ -136,6 +161,27 @@ export default function Home() {
               </a>
             </div>
           )}
+
+          
+        <div className="mt-6">
+            <label htmlFor="contact-select" className="block text-sm font-medium text-gray-700 mb-1">
+                Select a contact:
+            </label>
+            <select
+                id="contact-select"
+                className="block w-full px-3 py-2 border border-gray-300 bg-white rounded shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                value={selectedContact}
+                onChange={(e) => setSelectedContact(e.target.value)}
+            >
+                <option value="">-- Choose a contact --</option>
+                {contacts.map((contact, index) => (
+                <option key={index} value={contact.username}>
+                    {contact.username}, {contact.walletAddress}
+                </option>
+                ))}
+            </select>
+        </div>
+
 
           <div className="mt-6">
             <button

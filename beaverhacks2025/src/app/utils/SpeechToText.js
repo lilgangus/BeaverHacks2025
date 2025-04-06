@@ -40,7 +40,7 @@ export default function SpeechToText({ onTranscriptChange, onAudioSave }) {
       console.error('Speech recognition error:', event.error);
     };
   }
-
+  
   // Start and stop the audio recording using MediaRecorder
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
