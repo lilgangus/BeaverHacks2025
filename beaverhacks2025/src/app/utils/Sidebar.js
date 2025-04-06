@@ -34,6 +34,15 @@ const Sidebar = () => {
             </button>
           </li>
 
+          <li>
+            <button
+              className="w-full text-left py-2 px-4 hover:bg-gray-700 rounded"
+              onClick={() => router.push('/settings')}
+            >
+              Account Settings
+            </button> 
+          </li>
+
           {/* set the logout button to be at the bottom */}
 
           <li >

@@ -14,6 +14,7 @@ export default function Home() {
   const [audioFile, setAudioFile] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState('');
+  const [publicKey, setPublicKey] = useState("Not Set");
 
   const handleTranscriptChange = (newTranscript) => {
     setTranscript(newTranscript);
@@ -35,7 +36,7 @@ export default function Home() {
     console.log("Transcript:", transcript);
     console.log("Audio File:", audioFile);
     console.log("Selected Contact:", selectedContact);
-    
+
     if (!transcript || !audioFile || !selectedContact) {
       console.error("Some field is missing!");
       return;
@@ -109,6 +110,53 @@ export default function Home() {
         }
     }, [user]);
 
+    useEffect(() => {
+        
+        const fetchKeys = async () => {
+            if (!user) return;
+            const response = await fetch(`/api/settings?user=${user}&type=checkKeys`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if (data == true) {
+                fetchPubKeys();
+            }
+        };
+        fetchKeys();
+    
+    }, [user]);
+
+    const fetchPubKeys = async () => {
+        try {
+            const res = await fetch(`/api/settings?user=${user}&type=pubKey`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!res.ok) {
+                console.error("Error fetching keys");
+                return;
+            }
+
+            const pubKey = await res.json();
+            
+            setPublicKey(pubKey);
+            
+            console.log("Public Key:", pubKey);
+
+        } catch (err) {
+            console.error("Error fetching keys:", err);
+        }
+    };
+
+
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -125,7 +173,14 @@ export default function Home() {
           {user ? (
             <div>
               <p className="mb-4 text-lg font-semibold">Hello, {user} 👋</p>
-              <LogoutButton />
+              
+                {
+                    publicKey == "Not Set" ? (
+                        <p className="mb-4 italic text-gray-500">Please set your public key in the settings tab.</p>
+                    ) : (
+                        <p className="mb-4 italic text-gray-500">Your public key is: {publicKey}</p>
+                    )
+                }
             </div>
           ) : (
             <p className="mb-4 italic text-gray-500">Loading user...</p>
