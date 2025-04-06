@@ -32,12 +32,6 @@ export default function Home() {
 
   // Function to send the transcript and audio file to the backend
   const processSmartcontract = async () => {
-    // console.log("Processing smart contract...");
-    // console.log("Transcript:", transcript);
-    // console.log("Audio File:", audioFile);
-    // console.log("Selected Contact:", selectedContact);
-    // console.log("username :", user);
-    // console.log("Public Key:", publicKey);
 
     if (!transcript || !audioFile || !selectedContact) {
       console.error("Some field is missing!");
@@ -63,12 +57,21 @@ export default function Home() {
         console.log("Successfully uploaded transcript and audio!");
         const data = await response.json();
         console.log(data);
+        alert("Successfully uploaded transcript and audio! with id: " + data.contractID);
+
+        // clera all fields
+        setTranscript('');
+        setAudioFile(null);
+        setSelectedContact('');
+        setSelectedContact('Not Set');
+
       } else {
         console.error("Error uploading data:", response.statusText);
       }
     } catch (error) {
       console.error("Error sending request to backend:", error);
     }
+
   };
 
 

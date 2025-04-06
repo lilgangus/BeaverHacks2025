@@ -1,19 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasKeysUploaded, getUserKeys } from "../mongoAPI/settingsAPI";
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-import { TransactionBlock } from '@mysten/sui/transactions';
 
-import nacl from 'tweetnacl';
-
-// Helper to convert hex string to Uint8Array.
-function hexToUint8Array(hex) {
-  if (hex.length % 2 !== 0) throw new Error("Invalid hex string");
-  const uint8 = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    uint8[i / 2] = parseInt(hex.substr(i, 2), 16);
-  }
-  return uint8;
-}
+import { createContract, getAllContracts, getContractByUsername } from "../mongoAPI/contractAPI";
 
 
 export async function POST(request) {
@@ -44,66 +32,52 @@ export async function POST(request) {
     }
 
     const secretKey = keys.secretKey;
+    
+    // store all the data in mongodb
+    const data = {
+        transcript: transcript,
+        audio: audio,
+        contact: contact,
+        username: username,
+        publicKey: publicKey,
+    };
 
-    const audioUrl = storeAudioClipToURL(audio);
-    
-    
-    // const client = new SuiClient({ url: getFullnodeUrl('testnet') });
 
-    // const coins = await client.getCoins({
-    //     owner: publicKey,
-    //     coinType: '0x2::sui::SUI'
-    // });
+    // create the contract
+    const newContract = await createContract(transcript, audio, contact, username, publicKey);
+    if (!newContract) {
+        return NextResponse.json({ error: "Failed to create smart contract" }, { status: 500 });
+    }
 
-    // console.log("Coinsfd:", coins);
-    
-    // const balances = await client.getAllBalances({ owner: publicKey });
-    // console.log("Balances:", balances);
-    // const objs = await client.getOwnedObjects({ owner: publicKey });
-    // console.log("Owned Objects:", objs);
 
-    // Initialize the Sui client (using testnet for example)
-    tx.moveCall({
-        target: 'your_package::your_module::store_data',
-        arguments: [
-          tx.pure(String(transcript)),  // Transcript
-          tx.pure(String(audioUrl)),      // Audio URL
-          tx.pure(String(contact)),       // Contact public key
-        ],
-    });
-    
-      // Sign the transaction block using Ed25519 (with tweetnacl).
-      const { signature, bytes } = await tx.sign({
-        signer: {
-          // Return the keypair as needed by the Sui SDK.
-          getKeyPair: () => ({ publicKey, secretKey }),
-          // The sign function converts the secret key from hex and signs the message.
-          sign: async (msg) => {
-            const secretKeyUint8 = hexToUint8Array(secretKey);
-            // 'msg' should be a Uint8Array; if not, encode it.
-            const messageUint8 = typeof msg === "string" ? new TextEncoder().encode(msg) : msg;
-            const signatureUint8 = nacl.sign.detached(messageUint8, secretKeyUint8);
-            // Return the signature as a hex string.
-            return Buffer.from(signatureUint8).toString('hex');
-          },
-        },
-    });
-    
-      // Execute the transaction on Sui.
-    const result = await client.executeTransactionBlock({
-        transactionBlock: bytes,
-        signature,
-    });
-    
+    console.log("New contract:", newContract);
+     
 
-    console.log("Transaction result:", result);
-    
-
-    return NextResponse.json({ message: "Smart contract created successfully" });
+    return NextResponse.json({ message: "Smart contract created successfully" , contractID: newContract.insertedId.toString() }, { status: 200 });
 }
 
+export async function GET(request) {
+    // get the username from the query params
+    const { searchParams } = new URL(request.url);
+    const originUsername = searchParams.get("user");
 
-function storeAudioClipToURL (audioClip) {
-    const url = URL.createObjectURL(audioClip);
-    return url;
+    if (!originUsername) {
+        return NextResponse.json({ error: "Username is required" }, { status: 400 });
+    }
+
+    const contracts = await getContractByUsername(originUsername);
+    if (!contracts) {
+        return NextResponse.json({ error: "No contracts found" }, { status: 404 });
+    }
+    // format the contracts to turn the _id into a id
+    const formattedContracts = contracts.map((contract) => ({
+        id: contract._id.toString(),
+        transcript: contract.transcript,
+        audio: contract.audio,
+        contact: contract.contact,
+        username: contract.username,
+        publicKey: contract.publicKey,
+    }));
+    return NextResponse.json(formattedContracts);
+    
 }
