@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LogoutButton from "../utils/logout";
 import SpeechToText from "../utils/SpeechToText";
+import Sidebar from "../utils/Sidebar";
 
 export default function Home() {
   const router = useRouter();
@@ -84,64 +85,68 @@ export default function Home() {
   }, [router]);
 
   return (
-    <div className="max-w-xl mx-auto text-center mt-10">
-      <h1 className="text-3xl font-bold mb-4 underline">Welcome to BENNY!</h1>
-      <p className="mb-4">
-        Benny is your own personal AI assistant to help you with scheduling your everyday tasks and interact with the real world using technologies such as SUI!
-      </p>
+    <div className="flex">
+      {/* Sidebar */}
+      <Sidebar />
 
-      {user ? (
-        <div>
-          <p className="mb-4 text-lg font-semibold">Hello, {user} 👋</p>
-          <LogoutButton />
-        </div>
-      ) : (
-        <p className="mb-4 italic text-gray-500">Loading user...</p>
-      )}
+      {/* Main content */}
+      <div className="flex-1 p-6">
+        <div className="max-w-xl mx-auto text-center mt-10">
+          <h1 className="text-3xl font-bold mb-4 underline">Welcome to BENNY!</h1>
+          <p className="mb-4">
+            Benny is your own personal AI assistant to help you with scheduling your everyday tasks and interact with the real world using technologies such as SUI!
+          </p>
 
-      {/* Speech to Text and Audio Recording */}
-      <SpeechToText onTranscriptChange={handleTranscriptChange} onAudioSave={handleAudioSave} />
+          {user ? (
+            <div>
+              <p className="mb-4 text-lg font-semibold">Hello, {user} 👋</p>
+              <LogoutButton />
+            </div>
+          ) : (
+            <p className="mb-4 italic text-gray-500">Loading user...</p>
+          )}
 
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold">Transcript</h2>
-        <div className="border p-4 mt-2 bg-gray-50 rounded">
-          <p>{transcript || <em>Start speaking to see the transcript...</em>}</p>
+          <SpeechToText onTranscriptChange={handleTranscriptChange} onAudioSave={handleAudioSave} />
 
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold">Transcript</h2>
+            <div className="border p-4 mt-2 bg-gray-50 rounded">
+              <p>{transcript || <em>Start speaking to see the transcript...</em>}</p>
 
-            <a
+              <a
                 href={`data:text/plain;charset=utf-8,${encodeURIComponent(transcript)}`}
                 download="transcript.txt"
                 className="block mt-2 text-blue-600"
-            > Download Transcript </a>
+              >
+                Download Transcript
+              </a>
+            </div>
+          </div>
+
+          {audioFile && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold">Saved Audio File</h3>
+              <audio controls src={URL.createObjectURL(audioFile)} />
+              <a
+                href={URL.createObjectURL(audioFile)}
+                download="recorded-audio.webm"
+                className="block mt-2 text-blue-600"
+              >
+                Download Audio
+              </a>
+            </div>
+          )}
+
+          <div className="mt-6">
+            <button
+              onClick={processSmartcontract}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Save Transcript and Audio to Smart Contract
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Display Audio File */}
-      {audioFile && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold">Saved Audio File</h3>
-          <audio controls src={URL.createObjectURL(audioFile)} />
-          <a
-            href={URL.createObjectURL(audioFile)}
-            download="recorded-audio.webm"
-            className="block mt-2 text-blue-600"
-          >
-            Download Audio
-          </a>
-        </div>
-      )}
-
-      {/* Send data to backend to process */}
-      
-      <div className="mt-6">
-        <button
-          onClick={processSmartcontract}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          Save Transcript and Audio to Smart Contract
-        </button>
-      </div>
-
     </div>
   );
 }

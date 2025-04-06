@@ -19,7 +19,7 @@ async function connectToDatabase() {
       console.error("Error connecting to the database:", error);
       throw new Error("Failed to connect to the database");
     }
-  }
+}
 
 async function createUser(Username, Password, OSUverified, CreatedDate, Email, FirstName, LastName) {
   const users = await connectToDatabase();
